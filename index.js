@@ -41,24 +41,46 @@ class WebdriverAjax {
       );
     }
 
-    browser.addCommand('setupInterceptor', setup.bind(this));
-    browser.addCommand('getExpectations', getExpectations.bind(this));
-    browser.addCommand('resetExpectations', resetExpectations.bind(this));
-    browser.addCommand('expectRequest', expectRequest.bind(this));
-    browser.addCommand('assertRequests', assertRequests.bind(this));
-    browser.addCommand(
-      'assertExpectedRequestsOnly',
-      assertExpectedRequestsOnly.bind(this)
-    );
-    browser.addCommand('hasPendingRequests', hasPendingRequests);
-    browser.addCommand('getRequest', getRequest);
-    browser.addCommand('getRequests', getRequests);
+    let multiBrowsers = [];
+    let currentBrowser = browser;
+
+    var self = this;
+    init();
+    if (browser.constructor.name === 'MultiRemoteDriver') {
+      multiBrowsers = Object.keys(browser).filter(
+        (x) => browser[x].constructor.name === 'Browser'
+      );
+      for (let singleBrowser of multiBrowsers) {
+        init(singleBrowser);
+      }
+    }
+
+    function init(singleBrowser = null) {
+      if (singleBrowser) currentBrowser = browser[singleBrowser];
+      // console.log('currentBrowser', currentBrowser)
+      currentBrowser.addCommand('setupInterceptor', setup.bind(self));
+      currentBrowser.addCommand('getExpectations', getExpectations.bind(self));
+      currentBrowser.addCommand(
+        'resetExpectations',
+        resetExpectations.bind(self)
+      );
+      currentBrowser.addCommand('expectRequest', expectRequest.bind(self));
+      currentBrowser.addCommand('assertRequests', assertRequests.bind(self));
+      currentBrowser.addCommand(
+        'assertExpectedRequestsOnly',
+        assertExpectedRequestsOnly.bind(self)
+      );
+      currentBrowser.addCommand('hasPendingRequests', hasPendingRequests);
+      currentBrowser.addCommand('getRequest', getRequest);
+      currentBrowser.addCommand('getRequests', getRequests);
+    }
 
     function setup() {
-      return browser.executeAsync(interceptor.setup);
+      return currentBrowser.executeAsync(interceptor.setup);
     }
 
     function expectRequest(method, url, statusCode) {
+      //console.log("---->",this)
       this._wdajaxExpectations.push({
         method: method.toUpperCase(),
         url: url,
@@ -263,7 +285,7 @@ class WebdriverAjax {
     }
 
     async function getRequest(index, options = {}) {
-      const request = await browser.execute(
+      const request = await currentBrowser.execute(
         interceptor.getRequest,
         index > -1 ? index : undefined,
         options
@@ -287,7 +309,7 @@ class WebdriverAjax {
     }
 
     function hasPendingRequests() {
-      return browser.execute(interceptor.hasPending);
+      return currentBrowser.execute(interceptor.hasPending);
     }
 
     function transformRequest(req) {
