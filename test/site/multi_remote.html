@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Simple get</title>
+</head>
+<body>
+  <p id="text">
+    This file test multiDriver capabilities, use "npm test testMultiDriver"
+  </p>
+  <button id="stay">Press me</button>
+  <button id="redirect">Press me already!</button>
+  <div id="response">See you later!</div>
+  <script>
+    'use strict';
+
+    (function (window, document) {
+
+      var button1 = document.querySelector('#stay');
+      var button2 = document.querySelector('#redirect');
+
+      button1.addEventListener('click', function (evt) {
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/get.json');
+        xhr.addEventListener('load', () => document.querySelector('#response').textContent += "XHR response type: " + xhr.responseType);
+        xhr.send();
+
+      });
+
+      button2.addEventListener('click', function (evt) {
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/get.json');
+        xhr.addEventListener('load', function () {
+          window.location.pathname = '/get.html';
+        });
+        xhr.send();
+
+      });
+
+    })(window, window.document);
+  </script>
+</body>
+</html>

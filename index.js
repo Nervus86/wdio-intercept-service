@@ -44,7 +44,26 @@ class WebdriverAjax {
     let multiBrowsers = [];
     let currentBrowser = browser;
 
-    var self = this;
+    const init = (singleBrowser = null) => {
+      if (singleBrowser) currentBrowser = browser[singleBrowser];
+      // console.log('currentBrowser', currentBrowser)
+      currentBrowser.addCommand('setupInterceptor', setup.bind(this));
+      currentBrowser.addCommand('getExpectations', getExpectations.bind(this));
+      currentBrowser.addCommand(
+        'resetExpectations',
+        resetExpectations.bind(this)
+      );
+      currentBrowser.addCommand('expectRequest', expectRequest.bind(this));
+      currentBrowser.addCommand('assertRequests', assertRequests.bind(this));
+      currentBrowser.addCommand(
+        'assertExpectedRequestsOnly',
+        assertExpectedRequestsOnly.bind(this)
+      );
+      currentBrowser.addCommand('hasPendingRequests', hasPendingRequests);
+      currentBrowser.addCommand('getRequest', getRequest);
+      currentBrowser.addCommand('getRequests', getRequests);
+    };
+
     init();
     if (browser.constructor.name === 'MultiRemoteDriver') {
       multiBrowsers = Object.keys(browser).filter(
@@ -55,38 +74,17 @@ class WebdriverAjax {
       }
     }
 
-    function init(singleBrowser = null) {
-      if (singleBrowser) currentBrowser = browser[singleBrowser];
-      // console.log('currentBrowser', currentBrowser)
-      currentBrowser.addCommand('setupInterceptor', setup.bind(self));
-      currentBrowser.addCommand('getExpectations', getExpectations.bind(self));
-      currentBrowser.addCommand(
-        'resetExpectations',
-        resetExpectations.bind(self)
-      );
-      currentBrowser.addCommand('expectRequest', expectRequest.bind(self));
-      currentBrowser.addCommand('assertRequests', assertRequests.bind(self));
-      currentBrowser.addCommand(
-        'assertExpectedRequestsOnly',
-        assertExpectedRequestsOnly.bind(self)
-      );
-      currentBrowser.addCommand('hasPendingRequests', hasPendingRequests);
-      currentBrowser.addCommand('getRequest', getRequest);
-      currentBrowser.addCommand('getRequests', getRequests);
-    }
-
     function setup() {
       return currentBrowser.executeAsync(interceptor.setup);
     }
 
     function expectRequest(method, url, statusCode) {
-      //console.log("---->",this)
       this._wdajaxExpectations.push({
         method: method.toUpperCase(),
         url: url,
         statusCode: statusCode,
       });
-      return browser;
+      return currentBrowser;
     }
 
     function assertRequests(options = {}) {
@@ -177,7 +175,7 @@ class WebdriverAjax {
           }
         }
 
-        return browser;
+        return currentBrowser;
       });
     }
 
@@ -265,7 +263,7 @@ class WebdriverAjax {
           );
         }
 
-        return browser;
+        return currentBrowser;
       });
     }
 
@@ -273,7 +271,7 @@ class WebdriverAjax {
     // of expected requests after validating some.
     function resetExpectations() {
       this._wdajaxExpectations = [];
-      return browser;
+      return currentBrowser;
     }
 
     function getExpectations() {

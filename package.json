@@ -12,6 +12,7 @@
     "release:minor": "npm run release -- minor",
     "release:major": "npm run release -- major",
     "test": "wdio run ./test/wdio.conf.js",
+    "testMultiDriver": "wdio run ./test/wdioMultiDriver.conf.js",
     "prepare": "husky install"
   },
   "types": "./types/wdio-intercept-service.d.ts",
